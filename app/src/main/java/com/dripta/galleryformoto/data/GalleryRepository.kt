@@ -157,6 +157,20 @@ class GalleryRepository(private val context: Context) {
         db.trashDao().remove(mediaId)
     }
 
+    /**
+     * Drops trash rows whose underlying file no longer exists in MediaStore.
+     *
+     * On Android 11+ a permanent delete hands the user a system confirmation dialog and we
+     * return early, so we never learn whether they confirmed. Without this, the rows linger
+     * forever after the files are gone. Call it once the delete flow returns.
+     */
+    suspend fun purgeMissingTrashEntries() = withContext(Dispatchers.IO) {
+        val liveIds = MediaStoreRepository.queryAllMedia(context).map { it.id }.toSet()
+        db.trashDao().getAll().first()
+            .filterNot { it.mediaId in liveIds }
+            .forEach { db.trashDao().remove(it.mediaId) }
+    }
+
     suspend fun permanentlyDeleteTrashed(mediaIds: List<Long>): IntentSender? = withContext(Dispatchers.IO) {
         val trashItems = mediaIds.mapNotNull { db.trashDao().getById(it) }
         val uris = trashItems.map { Uri.parse(it.uri) }

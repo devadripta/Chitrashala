@@ -9,8 +9,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Deselect
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,6 +50,10 @@ fun TrashScreen(
     val scope = rememberCoroutineScope()
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var showEmptyBinConfirmation by remember { mutableStateOf(false) }
+    var menuExpanded by remember { mutableStateOf(false) }
+
+    val allSelected = items.isNotEmpty() && selectedIds.size == items.size
 
     BackHandler(enabled = selectedIds.isNotEmpty()) {
         selectedIds = emptySet()
@@ -52,20 +62,34 @@ fun TrashScreen(
     val deleteLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
     ) {
-        viewModel.refresh()
+        // The system dialog does not tell us whether the user confirmed, so reconcile the
+        // trash table against what actually still exists rather than assuming success.
+        viewModel.purgeMissingTrashEntries()
         selectedIds = emptySet()
     }
 
     fun performRestore() {
-        selectedIds.forEach { id ->
-            viewModel.restoreFromTrash(id)
-        }
+        viewModel.restoreAllFromTrash(selectedIds.toList())
         selectedIds = emptySet()
     }
 
     fun performPermanentDelete() {
         scope.launch {
             val intentSender = viewModel.permanentlyDeleteTrashed(selectedIds.toList())
+            if (intentSender != null) {
+                deleteLauncher.launch(
+                    androidx.activity.result.IntentSenderRequest.Builder(intentSender).build()
+                )
+            } else {
+                viewModel.refresh()
+                selectedIds = emptySet()
+            }
+        }
+    }
+
+    fun performEmptyBin() {
+        scope.launch {
+            val intentSender = viewModel.emptyTrash()
             if (intentSender != null) {
                 deleteLauncher.launch(
                     androidx.activity.result.IntentSenderRequest.Builder(intentSender).build()
@@ -94,6 +118,52 @@ fun TrashScreen(
                         }
                         IconButton(onClick = { showDeleteConfirmation = true }) {
                             Icon(Icons.Filled.DeleteForever, contentDescription = "Delete permanently")
+                        }
+                    }
+                    if (items.isNotEmpty()) {
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(Icons.Filled.MoreVert, contentDescription = "More")
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(if (allSelected) "Deselect all" else "Select all") },
+                                onClick = {
+                                    menuExpanded = false
+                                    selectedIds = if (allSelected) emptySet() else items.map { it.id }.toSet()
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        if (allSelected) Icons.Filled.Deselect else Icons.Filled.SelectAll,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Restore all") },
+                                onClick = {
+                                    menuExpanded = false
+                                    viewModel.restoreAllFromTrash(items.map { it.id })
+                                    selectedIds = emptySet()
+                                },
+                                leadingIcon = { Icon(Icons.Filled.Restore, contentDescription = null) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Empty Bin") },
+                                onClick = {
+                                    menuExpanded = false
+                                    showEmptyBinConfirmation = true
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Filled.DeleteSweep,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            )
                         }
                     }
                 }
@@ -129,16 +199,33 @@ fun TrashScreen(
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
-            title = { Text("Delete permanently?") },
-            text = { Text("These items will be permanently removed from your device.") },
+            title = { Text(if (selectedIds.size == 1) "Delete permanently?" else "Delete ${selectedIds.size} items permanently?") },
+            text = { Text("This cannot be undone. ${if (selectedIds.size == 1) "It" else "They"} will be removed from your device for good.") },
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteConfirmation = false
                     performPermanentDelete()
-                }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
+                }) { Text("Delete forever", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmation = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showEmptyBinConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showEmptyBinConfirmation = false },
+            title = { Text("Empty Bin?") },
+            text = { Text(if (items.size == 1) "The item in the Bin will be permanently removed from your device. This cannot be undone." else "All ${items.size} items will be permanently removed from your device. This cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showEmptyBinConfirmation = false
+                    performEmptyBin()
+                }) { Text("Empty Bin", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEmptyBinConfirmation = false }) { Text("Cancel") }
             }
         )
     }

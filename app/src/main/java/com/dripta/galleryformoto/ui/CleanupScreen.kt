@@ -182,15 +182,15 @@ fun CleanupScreen(
                 ) {
                     Icon(Icons.Filled.Delete, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Move $totalSelected items to Bin")
+                    Text(if (totalSelected == 1) "Move 1 item to Bin" else "Move $totalSelected items to Bin")
                 }
             }
 
             if (showDeleteConfirmation) {
                 AlertDialog(
                     onDismissRequest = { showDeleteConfirmation = false },
-                    title = { Text("Move $totalSelected items to Bin?") },
-                    text = { Text("You can restore them from the Bin within 30 days.") },
+                    title = { Text(if (totalSelected == 1) "Move to Bin?" else "Move $totalSelected items to Bin?") },
+                    text = { Text(if (totalSelected == 1) "You can restore it from the Bin within 30 days." else "You can restore them from the Bin within 30 days.") },
                     confirmButton = {
                         TextButton(onClick = {
                             showDeleteConfirmation = false

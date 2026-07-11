@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Deselect
+import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -56,7 +58,9 @@ fun SelectionTopBar(
     hideLabel: String = "Hide",
     visible: Boolean = true,
     onBatchEdit: (() -> Unit)? = null,
-    onCollage: (() -> Unit)? = null
+    onCollage: (() -> Unit)? = null,
+    onSelectAll: (() -> Unit)? = null,
+    allSelected: Boolean = false
 ) {
     AnimatedVisibility(
         visible = visible,
@@ -80,6 +84,12 @@ fun SelectionTopBar(
                 }
             },
             actions = {
+                if (onSelectAll != null) {
+                    SelectionAction(
+                        icon = if (allSelected) Icons.Filled.Deselect else Icons.Filled.SelectAll,
+                        onClick = onSelectAll
+                    )
+                }
                 if (onBatchEdit != null) {
                     SelectionAction(icon = Icons.Filled.AutoFixHigh, onClick = onBatchEdit)
                 }

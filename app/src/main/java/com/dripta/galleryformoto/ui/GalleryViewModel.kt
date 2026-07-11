@@ -275,8 +275,23 @@ class GalleryViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun restoreAllFromTrash(mediaIds: List<Long>) {
+        viewModelScope.launch {
+            mediaIds.forEach { repo.restoreFromTrash(it) }
+            refresh()
+        }
+    }
+
     suspend fun permanentlyDeleteTrashed(mediaIds: List<Long>): IntentSender? = repo.permanentlyDeleteTrashed(mediaIds)
     suspend fun emptyTrash(): IntentSender? = repo.emptyTrash()
+
+    /** Clears trash rows whose files are already gone (see the repository for why). */
+    fun purgeMissingTrashEntries() {
+        viewModelScope.launch {
+            repo.purgeMissingTrashEntries()
+            refresh()
+        }
+    }
 
     fun setFavoriteForIds(ids: Set<Long>, isFavorite: Boolean) {
         viewModelScope.launch {

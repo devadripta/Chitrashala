@@ -200,7 +200,12 @@ fun MediaListScreen(
                     onDelete = { showDeleteConfirmation = true },
                     onShare = { performShare() },
                     onBatchEdit = { showBatchEdit = true },
-                    onCollage = if (selectedIds.size in 2..6) { { showCollage = true } } else null
+                    onCollage = if (selectedIds.size in 2..6) { { showCollage = true } } else null,
+                    onSelectAll = {
+                        selectedIds = if (selectedIds.size == items.size) emptySet()
+                        else items.map { it.id }.toSet()
+                    },
+                    allSelected = items.isNotEmpty() && selectedIds.size == items.size
                 )
             }
         }
@@ -270,8 +275,8 @@ fun MediaListScreen(
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
-            title = { Text("Move ${selectedIds.size} items to Bin?") },
-            text = { Text("You can restore them from the Bin within 30 days.") },
+            title = { Text(if (selectedIds.size == 1) "Move to Bin?" else "Move ${selectedIds.size} items to Bin?") },
+            text = { Text(if (selectedIds.size == 1) "You can restore it from the Bin within 30 days." else "You can restore them from the Bin within 30 days.") },
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteConfirmation = false
