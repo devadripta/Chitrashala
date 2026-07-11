@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Chitrashala</string>
+    <string name="widget_random_memory_label">Random Memory</string>
+    <string name="widget_photo_description">Random memory photo</string>
+    <string name="widget_no_photos">Open Chitrashala and grant photo access to see a memory here</string>
+    <string name="widget_refresh_description">Show another memory</string>
+    <string name="trash_label">Trash</string>
+    <string name="trash_empty">Nothing in trash</string>
+    <string name="trash_auto_delete">Items stay in trash for 30 days</string>
+</resources>

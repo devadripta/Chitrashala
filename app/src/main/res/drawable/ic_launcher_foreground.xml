@@ -1,0 +1,33 @@
+<!-- Chitrashala launcher glyph: a framed picture, indigo hills under a saffron sun
+     on a cream card, like a miniature painting hung in an art hall. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- photo card -->
+    <path
+        android:pathData="M32,36 h44 a5,5 0 0 1 5,5 v26 a5,5 0 0 1 -5,5 h-44 a5,5 0 0 1 -5,-5 v-26 a5,5 0 0 1 5,-5 z"
+        android:fillColor="#FBF5E9" />
+
+    <!-- saffron sun -->
+    <path
+        android:pathData="M66,47 m-5.5,0 a5.5,5.5 0 1 1 11,0 a5.5,5.5 0 1 1 -11,0"
+        android:fillColor="#E8A33D" />
+
+    <!-- far hill (lighter indigo) -->
+    <path
+        android:pathData="M42,66 L54,50 L63,61 L66,57 L73,66 Z"
+        android:fillColor="#51608A" />
+
+    <!-- near hill (deep indigo) -->
+    <path
+        android:pathData="M31,66 L45,54 L57,66 Z"
+        android:fillColor="#2E3A59" />
+
+    <!-- card base to ground the composition -->
+    <path
+        android:pathData="M32,66 h44 v1 a5,5 0 0 1 -5,5 h-34 a5,5 0 0 1 -5,-5 z"
+        android:fillColor="#2E3A59" />
+</vector>
